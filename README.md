@@ -194,8 +194,7 @@ module multi_tb;
         // Test case 4: Select d
         a = 0; b = 0; c = 0; d = 1; s = 2'b11;
         #10;
-
-                $finish;
+        $finish;
     end
 
     // Monitor outputs
