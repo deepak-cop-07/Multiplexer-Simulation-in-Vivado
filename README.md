@@ -62,54 +62,303 @@ Once done, close the simulation by going to Simulation → "Close Simulation".
 
 ## Verilog Code
 
-4:1mux:
+4:1 Mux Gate-Level Impelement
 ```
-module mux4to1(I,S,y);
-input [3:0]I;
-input [1:0]S;
+module mux_v( A, B, C, D, S0, S1, Y ); 
+input A;
+input B;
+input C;
+input D;
+input S0;
+input S1;
+output Y;
+wire not_S0, not_S1;
+wire A_and, B_and, C_and, D_and;
+
+
+not (not_S0, S0);
+not (not_S1, S1);
+
+
+and (A_and, A, not_S1, not_S0);
+and (B_and, B, not_S1, S0);
+and (C_and, C, S1, not_S0);
+and (D_and, D, S1, S0);
+
+
+or (Y, A_and, B_and, C_and, D_and);
+endmodule
+```
+4:1 Mux Gate-Level Impelement
+```
+
+module multi_tb;
+    reg A, B, C, D;
+    reg S0, S1;
+    wire Y;
+
+    // Instantiate the multiplexer
+    mux_v u_mux_v(
+        .A(A), 
+        .B(B), 
+        .C(C), 
+        .D(D), 
+        .S0(S0), 
+        .S1(S1), 
+        .Y(Y)
+    );
+
+    initial begin
+        // Test case 1: Select A
+        A = 1; B = 0; C = 0; D = 0; S0 = 0; S1 = 0;
+        #10;
+
+        // Test case 2: Select B
+        A = 0; B = 1; C = 0; D = 0; S0 = 1; S1 = 0;
+        #10;
+        
+        // Test case 3: Select C
+        A = 0; B = 0; C = 1; D = 0; S0 = 0; S1 = 1;
+        #10;
+
+        // Test case 4: Select D
+        A = 0; B = 0; C = 0; D = 1; S0 = 1; S1 = 1;
+        #10;
+
+        
+
+        $finish;
+    end
+
+    // Monitor outputs
+    initial begin
+        $monitor("Time = %0t, A = %0d, B = %0d, C = %0d, D = %0d, S0 = %0d, S1 = %0d, Y = %0d",
+                 $time, A, B, C, D, S0, S1, Y);
+    end
+
+endmodule
+```
+
+## OUTPUT
+
+![WhatsApp Image 2024-11-26 at 16 11 13_21e5d0c2](https://github.com/user-attachments/assets/b81a29ab-e8cc-435e-89b7-984715c4e2ff)
+
+## 4:1 MUX Data Flow Implementation
+```
+module mux_v(a,b,c,d,s,y);
+input a;
+input b;
+input c;
+input d;
+input[1:0]s;
+output y;
+
+
+
+assign y = (s==2'b00)? a:
+            (s==2'b01)? b :
+            (s==2'b10)? c : d;
+
+endmodule
+```
+## TESTBENCH
+```
+module multi_tb;
+    reg a, b, c, d;
+    reg [1:0] s;
+    wire y;
+
+    // Instantiate the multiplexer
+    mux_v u_mux_v(
+        .a(a), 
+        .b(b), 
+        .c(c), 
+        .d(d), 
+        .s(s), 
+        .y(y)
+    );
+
+    initial begin
+        // Test case 1: Select a
+        a = 1; b = 0; c = 0; d = 0; s = 2'b00;
+        #10;
+
+        // Test case 2: Select b
+        a = 0; b = 1; c = 0; d = 0; s = 2'b01;
+        #10;
+
+        // Test case 3: Select c
+         a = 0; b = 0; c = 1; d = 0; s = 2'b10;
+        #10;
+
+        // Test case 4: Select d
+        a = 0; b = 0; c = 0; d = 1; s = 2'b11;
+        #10;
+
+                $finish;
+    end
+
+    // Monitor outputs
+    initial begin
+        $monitor("Time = %0t, a = %0d, b = %0d, c = %0d, d = %0d, s = %0b, y = %0d",
+                 $time, a, b, c, d, s, y);
+    end
+
+endmodule
+```
+## OUTPUT
+
+![WhatsApp Image 2024-11-26 at 16 11 41_7f1049f6](https://github.com/user-attachments/assets/bda9a8d3-6708-4101-96d0-cdac34066857)
+
+## 4:1 MUX Behavioral Implementation
+```
+module mux_v(a,b,c,d,s,y);
+input a;
+input b;
+input c;
+input d;
+input[1:0]s;
 output reg y;
-always@(I,S)
-begin
-   case(S)
-     2'b00 : y<=I[0];
-     2'b01 : y<=I[1];
-     2'b10 : y<=I[2];
-     2'b11 : y<=I[3];
-     default : y<=0;
-   endcase
+
+always@(*)begin
+
+y <= (s==2'b00)? a:
+     (s==2'b01)? b :
+     (s==2'b10)? c : d;
 end
 endmodule
 ```
-4:1 muxtb:
+## TESTBENCH
 ```
-module mux_tb1;
-reg[3:0]I;
-reg[1:0]s;
-wire y;
-mux4to1 dut(I,s,y);
-initial
-begin
-I=4'b1100;
-s=2'b00;
-#100
-s=2'b01;
-#100
-s=2'b10;
-#100
-s=2'b11;
-end
+module multi_tb;
+    reg a, b, c, d;
+    reg [1:0] s;
+    wire y;
+
+    // Instantiate the multiplexer
+    mux_v u_mux_v(
+        .a(a), 
+        .b(b), 
+        .c(c), 
+        .d(d), 
+        .s(s), 
+        .y(y)
+    );
+
+    initial begin
+        // Test case 1: Select input a
+        a = 1; b = 0; c = 0; d = 0; s = 2'b00;
+        #10;
+
+        // Test case 2: Select input b
+        a = 0; b = 1; c = 0; d = 0; s = 2'b01;
+        #10;
+
+        // Test case 3: Select input c
+        a = 0; b = 0; c = 1; d = 0; s = 2'b10;
+        #10;
+        
+        // Test case 4: Select input d
+        a = 0; b = 0; c = 0; d = 1; s = 2'b11;
+        #10;
+        finish;
+    end
+
+    // Monitor outputs
+    initial begin
+        $monitor("Time = %0t, a = %0d, b = %0d, c = %0d, d = %0d, s = %0b, y = %0d",
+                 $time, a, b, c, d, s, y);
+    end
+
+endmodule
+```
+## OUTPUT
+
+![WhatsApp Image 2024-11-26 at 16 12 21_b2ba0576](https://github.com/user-attachments/assets/d8f0dffc-ae6b-4f55-a415-2c8d7abbb254)
+
+## 4:1 MUX Structural Implementation
+```
+module mux_v(
+    a, b, c, d,  // Inputs
+    s0, s1,      // Select lines
+    y           // Output
+);
+
+    input a, b, c, d;
+    input s0, s1;
+    output y;
+
+    wire not_s0, not_s1;
+    wire a_and, b_and, c_and, d_and;
+
+    // Invert select lines
+    not u_not_s0(not_s0, s0);
+    not u_not_s1(not_s1, s1);
+
+    // AND gates for each input
+    and u_a_and(a_and, a, not_s1, not_s0);
+    and u_b_and(b_and, b, not_s1, s0);
+    and u_c_and(c_and, c, s1, not_s0);
+    and u_d_and(d_and, d, s1, s0);
+
+    // OR gate to combine AND outputs
+    or u_or(y, a_and, b_and, c_and, d_and);
+
+endmodule
+```
+## TESTBENCH
+```
+module multi_tb;
+    reg a, b, c, d;
+    reg s0, s1;
+    wire y;
+
+    // Instantiate the multiplexer
+    mux_v u_mux_v(
+        .a(a), 
+        .b(b), 
+        .c(c), 
+        .d(d), 
+        .s0(s0), 
+        .s1(s1), 
+        .y(y)
+    );
+
+    initial begin
+        // Test case 1: Select a
+        a = 1; b = 0; c = 0; d = 0; s0 = 0; s1 = 0;
+        #10;
+
+        // Test case 2: Select b
+        a = 0; b = 1; c = 0; d = 0; s0 = 1; s1 = 0;
+        #10;
+
+        // Test case 3: Select c
+        a = 0; b = 0; c = 1; d = 0; s0 = 0; s1 = 1;
+        #10;
+
+        // Test case 4: Select d
+        a = 0; b = 0; c = 0; d = 1; s0 = 1; s1 = 1;
+        #10;
+        
+        $finish;
+        end
+
+    // Monitor outputs
+    initial begin
+        $monitor("Time = %0t, a = %0d, b = %0d, c = %0d, d = %0d, s0 = %0d, s1 = %0d, y = %0d",
+                 $time, a, b, c, d, s0, s1, y);
+    end
+
 endmodule
 ```
 
 
-## Sample Output
-```
-Time=0 | S1=0 S0=0 | Inputs: A=0 B=0 C=0 D=0 | Y_gate=0 | Y_dataflow=0 | Y_behavioral=0 | Y_structural=0
-Time=10 | S1=0 S0=0 | Inputs: A=0 B=0 C=0 D=0 | Y_gate=0 | Y_dataflow=0 | Y_behavioral=0 | Y_structural=0
-Time=20 | S1=0 S0=0 | Inputs: A=0 B=0 C=0 D=1 | Y_gate=0 | Y_dataflow=0 | Y_behavioral=0 | Y_structural=0
-Time=30 | S1=0 S0=1 | Inputs: A=0 B=0 C=0 D=1 | Y_gate=0 | Y_dataflow=0 | Y_behavioral=0 | Y_structural=0
-Time=40 | S1=1 S0=0 | Inputs: A=0 B=0 C=0 D=1 | Y_gate=0 | Y_dataflow=0 | Y_behavioral=0 | Y_structural=0
-```
+
+##  Output
+
+![WhatsApp Image 2024-11-26 at 16 12 48_d1d6c4f9](https://github.com/user-attachments/assets/32c34520-4bf1-4c96-abf0-1a096d6969f4)
+
 
 ## Conclusion:
 
